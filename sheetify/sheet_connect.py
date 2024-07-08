@@ -4,7 +4,7 @@ import gspread
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
-from clockify_scraping.config.settings import Settings
+from sheetify.config.settings import Settings
 
 class GoogleSheetAPI:
     def __init__(self, spreadsheet_id: str, credentials_path: str, token_path: str) -> None:

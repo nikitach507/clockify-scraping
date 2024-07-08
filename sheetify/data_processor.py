@@ -2,13 +2,13 @@ from datetime import datetime, timedelta
 import requests
 import json
 
-from clockify_scraping.clockify_api import ClockifyAPI
-from clockify_scraping.config.settings import Settings
+from sheetify.clockify_api import ClockifyAPI
+from sheetify.config.settings import Settings
 import time
 import gspread
 from datetime import datetime, timedelta
 from clockify_api import ClockifyAPI
-from clockify_scraping.sheet_connect import GoogleSheetAPI
+from sheetify.sheet_connect import GoogleSheetAPI
 
 def get_data():
     clockify_api = ClockifyAPI(api_key=Settings.CLOCKIFY_API_KEY)

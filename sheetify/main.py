@@ -3,8 +3,8 @@ import requests
 import json
 import argparse
 
-from clockify_scraping.clockify_api import ClockifyAPI
-from clockify_scraping.config.settings import Settings
+from sheetify.clockify_api import ClockifyAPI
+from sheetify.config.settings import Settings
 
 def add_project(project_name, start_date, end_date):
     """
@@ -122,7 +122,7 @@ def main():
         project_id = all_projects[project]['id']
         users = clockify_api.get_workspace_users(Settings.CLOCKIFY_WORKSPACE_ID, params={'projectId': project_id})
         users_by_project[project] = [user['name'] for user in users]
-        
+
     print("Users by project:")
     print(json.dumps(users_by_project, indent=4))
 

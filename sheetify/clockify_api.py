@@ -1,6 +1,6 @@
 import json
 import requests
-from clockify_scraping.config.settings import Settings
+from sheetify.config.settings import Settings
 
 
 class ClockifyAPI:
