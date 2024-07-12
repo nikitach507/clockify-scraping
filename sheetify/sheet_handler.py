@@ -9,40 +9,50 @@ from datetime import datetime
 from collections import defaultdict
     
 
-def generate_total_rows(current_date: str, day_total: dict[str, str], found_users: dict[str, str]) -> list[list[str]]:
-    total_row = [f'TOTAL [{current_date}]'] + [
-        f"{int((datetime.strptime(day_total[user_id]['end_time'], '%H:%M') - datetime.strptime(day_total[user_id]['start_time'], '%H:%M')).total_seconds() / 3600 // 1)}."
-        f"{int((datetime.strptime(day_total[user_id]['end_time'], '%H:%M') - datetime.strptime(day_total[user_id]['start_time'], '%H:%M')).total_seconds() / 60 % 60):02d} h."
-        if 'start_time' in day_total[user_id] else '0.0 h.'
-        for user_id in found_users.values()
-    ]
-    separator_row = ['-' * 20] * len(total_row)
-    return [separator_row, total_row, separator_row]
+def generate_total_rows(current_date: str, start_row: int, found_users: dict[str, str], num_rows: int = 96) -> list[list[str]]:
+    total_formula_row = []
+    for col_index, user in enumerate(found_users.values(), start=1):
+        column_letter = chr(ord('A') + col_index)
 
+        count_formula = f"COUNTIF({column_letter}{start_row}:{column_letter}{start_row + num_rows - 1}, \"<>-\")"
+        
+        total_minutes = f"{count_formula} * 15"
+        formatted_time_formula = f"=TEXT(INT({total_minutes} / 60), \"0\") & \":\" & TEXT(MOD({total_minutes}, 60), \"00\")"
 
-def append_data_to_sheet(worksheet: gspread.Worksheet, data: list[list[datetime | str]], current_date: str) -> None:
+        
+        total_formula_row.append(formatted_time_formula)
+
+    total_row = [f'TOTAL [{current_date}]'] + total_formula_row
+    return [total_row]
+
+def append_data_to_sheet(worksheet: gspread.Worksheet, data: list[list[datetime | str]], current_date: str, found_users: dict[str, str], start_row: int) -> None:
     while True:
         try:
-            worksheet.append_rows(data)
+            worksheet.append_rows(data, value_input_option='USER_ENTERED')
+            total_rows = generate_total_rows(current_date, start_row, found_users)
+            worksheet.append_rows(total_rows, value_input_option='USER_ENTERED')
             break
         except gspread.exceptions.APIError as e:
             print(f"Error appending rows for date {current_date}: {e}")
             time.sleep(30)
 
+def append_all_totals(worksheet: gspread.Worksheet, num_days: int, found_users: dict[str, str], start_date: str, stop_date: str) -> None:
+    total_row_start = 1
+    print(f"Appending all totals for {num_days} days")
+    total_row_end = num_days + num_days * 97
 
-def append_all_totals(worksheet: gspread.Worksheet, day_totals: list[dict], found_users: dict[str, str], start_date: str, stop_date: str) -> None:
-    total_times = defaultdict(int)
-    for day_total in day_totals:
-        for user_id in found_users.values():
-            if 'start_time' in day_total[user_id] and 'end_time' in day_total[user_id]:
-                start_time = datetime.strptime(day_total[user_id]['start_time'], '%H:%M')
-                end_time = datetime.strptime(day_total[user_id]['end_time'], '%H:%M')
-                total_times[user_id] += int((end_time - start_time).total_seconds() / 60)
-    all_total_row = [f'ALL TOTAL [{start_date} / {stop_date}]'] + [
-        f"{total_times[user_id] // 60}.{total_times[user_id] % 60:02d} h."
-        for user_id in found_users.values()
-    ]
-    worksheet.append_rows([all_total_row])
+    all_total_formula_row = []
+    for col_index, user in enumerate(found_users.values(), start=1):
+        column_letter = chr(ord('A') + col_index)
+        all_total_minutes = f"SUM(ArrayFormula(VALUE(SPLIT(FILTER({column_letter}{total_row_start}:{column_letter}{total_row_end}, REGEXMATCH(A{total_row_start}:A{total_row_end}, \"TOTAL*\")), \":\")) * {{60, 1}}))"
+        formatted_time_formula = f"=TEXT(INT({all_total_minutes} / 60), \"0\") & \":\" & TEXT(MOD({all_total_minutes}, 60), \"00\")"
+
+        all_total_formula_row.append(formatted_time_formula)
+
+    all_total_row = [f'ALL TOTAL [{start_date} / {stop_date}]'] + all_total_formula_row
+    separator_row = ['-' * 20] * len(all_total_row)
+
+    worksheet.append_rows([separator_row, all_total_row, separator_row], value_input_option='USER_ENTERED')
 
 
 class GoogleSheetAPI:

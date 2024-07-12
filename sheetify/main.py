@@ -57,6 +57,7 @@ def main(project: str, start: datetime, stop: datetime, api_key: str | None, wor
     try:
         project_data = clockify_api.initialize_project_data(project)
     except click.BadParameter as e:
+        print(e)
         exit(0) 
         
     sheet_name = f"{project_data['name']} [{start} / {stop}]"
@@ -66,35 +67,27 @@ def main(project: str, start: datetime, stop: datetime, api_key: str | None, wor
     found_users = {user['name']: user['id'] for user in users_by_project}
 
     current_date = start
-    day_totals = [dict]
+    day_totals = 0
+    row_index = 2
 
     while current_date <= stop:
         print(f"Processing date: {current_date}")
-        day_begin = datetime.strptime(current_date, '%Y-%m-%d').replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=timezone.utc) # datetime: 1900-01-01 00:00:00+00:00
-        day_finish = (day_begin + timedelta(days=1) - timedelta(minutes=15)).replace(tzinfo=timezone.utc) # datetime: 1900-01-01 23:45:00+00:00
+        day_begin = datetime.strptime(current_date, '%Y-%m-%d').replace(hour=0, minute=15, second=0, microsecond=0, tzinfo=timezone.utc) # datetime: 1900-01-01 00:15:00+02:00
+        day_finish = (day_begin + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=timezone.utc) # datetime: 1900-01-02 00:00:00+02:00
         time_entries = clockify_api.fetch_time_entries(found_users.values(), project_data['id'], day_begin, day_finish)
 
         header_row = [current_date] + list(found_users.keys())
         sheet_data_to_send = [header_row]
-        day_total = defaultdict(dict)
         
         for time_slot in range(0, 96):
             time_period = (day_begin + timedelta(minutes=15 * time_slot)).strftime('%H:%M') # str: 04:30
             row = [time_period] + [time_entries[user_id].get(time_period, '-') for user_id in found_users.values()]
             sheet_data_to_send.append(row)
-            for user_id in found_users.values():
-                work_description = time_entries[user_id].get(time_period)
-                if work_description and work_description != '-':
-                    if not day_total[user_id]:
-                        day_total[user_id]['start_time'] = time_period
-                    day_total[user_id]["end_time"] = time_period   
-
-        total_rows = generate_total_rows(current_date, day_total, found_users)
-        sheet_data_to_send.extend(total_rows)
-
-        append_data_to_sheet(worksheet, sheet_data_to_send, current_date)
-        day_totals.append(day_total)
-
+            
+        append_data_to_sheet(worksheet, sheet_data_to_send, current_date, found_users, row_index)
+        
+        row_index += 98
+        day_totals += 1
         current_date = (day_begin + timedelta(days=1)).strftime('%Y-%m-%d') # str: 1900-01-02
 
     append_all_totals(worksheet, day_totals, found_users, start, stop)
