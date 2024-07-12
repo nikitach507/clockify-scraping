@@ -102,8 +102,7 @@ class ClockifyAPI:
                     selected_start = max(start_of_work, start_of_day) # datetime: 1900-01-01 04:31:00+02:00
                     selected_end = min(end_of_work, end_of_day) # datetime: 1900-01-01 04:41:00+02:00
 
-                    if selected_start.minute % 15 != 0:
-                        selected_start = self.round_time_to_nearest_quarter(selected_start, round_up=False) # datetime: 1900-01-01 04:30:00+02:00
+                    selected_start = self.round_time_to_nearest_quarter(selected_start, round_up=True) # datetime: 1900-01-01 04:30:00+02:00
                     if selected_end.minute % 15 != 0:
                         selected_end = self.round_time_to_nearest_quarter(selected_end, round_up=True) # datetime: 1900-01-01 04:45:00+02:00
                     
