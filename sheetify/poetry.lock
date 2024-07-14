@@ -218,20 +218,6 @@ google-auth = ">=1.12.0"
 google-auth-oauthlib = ">=0.4.1"
 
 [[package]]
-name = "gspread-formatting"
-version = "1.2.0"
-description = "Complete Google Sheets formatting support for gspread worksheets"
-optional = false
-python-versions = "*"
-files = [
-    {file = "gspread-formatting-1.2.0.tar.gz", hash = "sha256:ba88eab6940e8f37580fc3073e89848ab7a6eaab4ed91f43b731579280c14086"},
-    {file = "gspread_formatting-1.2.0-py2.py3-none-any.whl", hash = "sha256:9400a2369021ae6f6b31ed12eeddea35e5cfe1fd6c795487ed228eaf10fafad5"},
-]
-
-[package.dependencies]
-gspread = ">=3.0.0"
-
-[[package]]
 name = "httplib2"
 version = "0.22.0"
 description = "A comprehensive HTTP client library."
@@ -441,6 +427,26 @@ files = [
 ]
 
 [[package]]
+name = "tqdm"
+version = "4.66.4"
+description = "Fast, Extensible Progress Meter"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "tqdm-4.66.4-py3-none-any.whl", hash = "sha256:b75ca56b413b030bc3f00af51fd2c1a1a5eac6a0c1cca83cbb37a5c52abce644"},
+    {file = "tqdm-4.66.4.tar.gz", hash = "sha256:e4d936c9de8727928f3be6079590e97d9abfe8d39a590be678eb5919ffc186bb"},
+]
+
+[package.dependencies]
+colorama = {version = "*", markers = "platform_system == \"Windows\""}
+
+[package.extras]
+dev = ["pytest (>=6)", "pytest-cov", "pytest-timeout", "pytest-xdist"]
+notebook = ["ipywidgets (>=6)"]
+slack = ["slack-sdk"]
+telegram = ["requests"]
+
+[[package]]
 name = "urllib3"
 version = "2.2.2"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
@@ -460,4 +466,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "0b7702238585369ce04ff27535a294c8d1f250d55aa2b6d7b8c4f1415837f3a4"
+content-hash = "e189c17db66213c141198ec608ab829ce9b1e35c2bfdcd1296a8c2104cda450f"

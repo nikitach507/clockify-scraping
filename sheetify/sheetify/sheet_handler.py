@@ -19,7 +19,6 @@ def generate_total_rows(current_date: str, start_row: int, found_users: dict[str
         total_minutes = f"{count_formula} * 15"
         formatted_time_formula = f"=TEXT(INT({total_minutes} / 60), \"0\") & \":\" & TEXT(MOD({total_minutes}, 60), \"00\")"
 
-        
         total_formula_row.append(formatted_time_formula)
 
     total_row = [f'TOTAL [{current_date}]'] + total_formula_row
@@ -34,7 +33,7 @@ def append_data_to_sheet(worksheet: gspread.Worksheet, data: list[list[datetime 
             break
         except gspread.exceptions.APIError as e:
             print(f"Error appending rows for date {current_date}: {e}")
-            time.sleep(30)
+            time.sleep(60)
 
 def append_all_totals(worksheet: gspread.Worksheet, num_days: int, found_users: dict[str, str], start_date: str, stop_date: str) -> None:
     total_row_start = 1

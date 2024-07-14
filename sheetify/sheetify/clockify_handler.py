@@ -1,7 +1,7 @@
 import click
 import pytz
 import requests
-from sheetify.config.settings import Settings
+from sheetify.config.nikita_settings import Settings
 from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 
@@ -41,6 +41,7 @@ class ClockifyAPI:
         url = f"{Settings.CLOCKIFY_BASE_URL}/workspaces/{self.workspace_id}/users"
         try:
             response = requests.get(url, headers=self.headers, params=params)
+
             return response.json()
         except requests.exceptions.HTTPError as err:
             print(f"Error fetching users: {err}")
