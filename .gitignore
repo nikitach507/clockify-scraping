@@ -27,6 +27,7 @@ share/python-wheels/
 MANIFEST
 .gitignore
 .DS_Store
+config/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
