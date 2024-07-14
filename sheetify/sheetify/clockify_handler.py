@@ -13,6 +13,18 @@ class ClockifyAPI:
             'Content-Type': 'application/json'
         }
         self.workspace_id = workspace_id
+        self._validate_clockify_data()
+
+    def _validate_clockify_data(self) -> None:
+        api_url = 'https://api.clockify.me/api/v1/user'
+        response = requests.get(api_url, headers=self.headers)
+        if response.status_code != 200:
+            raise click.BadParameter('Invalid API key: User does not exist.')
+        
+        id_url = 'https://api.clockify.me/api/v1/workspaces'
+        response = requests.get(id_url, headers=self.headers)
+        if response.status_code != 200:
+            raise click.BadParameter('Invalid workspace ID: Workspace does not exist.')
 
     @classmethod
     def round_time_to_nearest_quarter(cls, dt: datetime, round_up: bool = False) -> datetime:

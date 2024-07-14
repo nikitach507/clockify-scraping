@@ -20,11 +20,9 @@ def click_validate_dates(start_date: datetime, end_date: datetime) -> None:
         raise click.BadParameter('End date cannot be in the future.')
     
 def click_validate_auth_data(start_date: datetime, end_date: datetime, api_key: str, workspace_id: str, google_creds: str, sheet_id: str) -> None:
-    #  TODO: Check if API key is valid
-    #  TODO: Check if this API key has this workspace
-    # if api_key and not re.match(r'^[0-9a-zA-Z]{32}$', api_key):
-    #     raise click.BadParameter('Invalid API key.')
-    if workspace_id and not re.match(r'^[0-9a-f]{24}$', workspace_id):
+    if api_key and not re.match(r'^[0-9a-zA-Z]{48}$', api_key):
+        raise click.BadParameter('Invalid API key.')
+    if workspace_id and not re.match(r'^[0-9a-z]{24}$', workspace_id):
         raise click.BadParameter('Invalid workspace ID.')
     if google_creds:
         if not os.path.isfile(google_creds):
