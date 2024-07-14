@@ -48,12 +48,12 @@ def main(project: str, start: datetime, stop: datetime, api_key: str | None, wor
     click_validate_dates(start, stop)
     click_validate_auth_data(start, stop, api_key, workspace_id, google_creds, sheet_id)
     total_days = float((stop - start).days)
-
     start, stop = str(start.date()), str(stop.date()) # str: 1900-01-01
+    sheet_id = sheet_id if sheet_id else Settings.SPREADSHEET_ID
 
     clockify_api = ClockifyAPI(api_key=Settings.CLOCKIFY_API_KEY if not api_key else api_key,
                                workspace_id=Settings.CLOCKIFY_WORKSPACE_ID if not workspace_id else workspace_id)
-    sheet_api = GoogleSheetAPI(spreadsheet_id=Settings.SPREADSHEET_ID if not sheet_id else sheet_id,
+    sheet_api = GoogleSheetAPI(spreadsheet_id=sheet_id,
                                credentials_path=Settings.GOOGLE_SHEETS_CREDENTIALS_FILE if not google_creds else google_creds, 
                                token_path=Settings.GOOGLE_OAUTH_TOKEN_FILE)
     
@@ -94,7 +94,7 @@ def main(project: str, start: datetime, stop: datetime, api_key: str | None, wor
         progress_bar.update(1)
 
     progress_bar.close()
-    append_all_totals(worksheet, total_days, found_users, start, stop)
+    append_all_totals(worksheet, int(total_days), found_users, start, stop)
     sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}"
     print(f"Data successfully updated in Google Sheets. Open the file here: {sheet_url}")
 
