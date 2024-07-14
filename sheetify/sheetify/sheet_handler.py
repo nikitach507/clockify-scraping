@@ -37,7 +37,6 @@ def append_data_to_sheet(worksheet: gspread.Worksheet, data: list[list[datetime 
 
 def append_all_totals(worksheet: gspread.Worksheet, num_days: int, found_users: dict[str, str], start_date: str, stop_date: str) -> None:
     total_row_start = 1
-    print(f"Appending all totals for {num_days} days")
     total_row_end = num_days + num_days * 97
 
     all_total_formula_row = []
