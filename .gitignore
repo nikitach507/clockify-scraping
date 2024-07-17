@@ -27,6 +27,7 @@ share/python-wheels/
 MANIFEST
 .gitignore
 .DS_Store
+data/
 config/
 
 # PyInstaller
