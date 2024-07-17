@@ -14,7 +14,7 @@ def generate_total_rows(current_date: str, start_row: int, found_users: dict[str
     for col_index, user in enumerate(found_users.values(), start=1):
         column_letter = chr(ord('A') + col_index)
 
-        count_formula = f"COUNTIF({column_letter}{start_row}:{column_letter}{start_row + num_rows - 1}, \"<>-\")"
+        count_formula = f"COUNTIF({column_letter}{start_row}:{column_letter}{start_row + num_rows - 1}, \"<>\")"
         
         total_minutes = f"{count_formula} * 15"
         formatted_time_formula = f"=TEXT(INT({total_minutes} / 60), \"0\") & \":\" & TEXT(MOD({total_minutes}, 60), \"00\")"
@@ -97,7 +97,6 @@ class GoogleSheetAPI:
             try:
                 self.open_sheet().add_worksheet(title=sheet_name, rows="1000", cols="26")
                 worksheet = self.open_sheet().worksheet(sheet_name)
-                print(f"Sheet {sheet_name} created.")
                 return worksheet
             except gspread.exceptions.APIError as e:
                 print(f"Error creating sheet {sheet_name}: {e}")
