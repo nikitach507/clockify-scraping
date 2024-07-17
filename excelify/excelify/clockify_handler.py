@@ -1,7 +1,7 @@
 import click
 import pytz
 import requests
-from excelify.config.nikita_settings import Settings
+from excelify.config.pavel_settings import Settings
 from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 
@@ -103,7 +103,7 @@ class ClockifyAPI:
         time_entries = defaultdict(lambda: defaultdict(str))
 
         for user_id in users_id:
-            time_entries_by_user = self.get_time_entries_for_user(user_id, params={'project': project_id})
+            time_entries_by_user = self.get_time_entries_for_user(user_id, params={'project': project_id, 'start': start_of_day.isoformat(), 'end': end_of_day.isoformat()})
 
             for time_entry in time_entries_by_user:
                 start_of_work = self.convert_to_local_time(datetime.fromisoformat(time_entry['timeInterval']['start']).replace(tzinfo=timezone.utc)) # datetime: 1900-01-01 04:31:00+02:00
@@ -126,3 +126,17 @@ class ClockifyAPI:
         
         return time_entries
     
+    def get_users_exclusion(self, all_users: dict, project_id: str, first_day: datetime, last_day: datetime) -> dict:
+        users_appeared = set()
+        users_exclusion = {}
+        for user in all_users:
+            time_entries = self.get_time_entries_for_user(user['id'], params={'project': project_id, 'start': first_day.isoformat(), 'end': last_day.isoformat()})
+
+            if time_entries:
+                users_appeared.add(user['id'])
+
+        for user in all_users:
+            if user['id'] not in users_appeared:
+                users_exclusion[user['id']] = user['name']
+                
+        return users_exclusion
