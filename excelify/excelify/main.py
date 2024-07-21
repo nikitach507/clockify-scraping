@@ -6,7 +6,7 @@ from tqdm import tqdm
 from openpyxl import Workbook
 from excelify.clockify_handler import ClockifyAPI
 from excelify.config.pavel_settings import Settings
-from excelify.sheet_handler import append_data_to_sheet, append_all_totals, thin_border
+from excelify.sheet_handler import append_data_to_sheet, append_all_totals
 
 
 def click_validate_dates(start_date: datetime, end_date: datetime) -> tuple[str, str]:
