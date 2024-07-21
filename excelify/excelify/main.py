@@ -6,7 +6,7 @@ from tqdm import tqdm
 from openpyxl import Workbook
 from excelify.clockify_handler import ClockifyAPI
 from excelify.config.pavel_settings import Settings
-from excelify.sheet_handler import append_data_to_sheet, append_all_totals
+from excelify.sheet_handler import append_data_to_sheet, append_all_totals, thin_border
 
 
 def click_validate_dates(start_date: datetime, end_date: datetime) -> tuple[str, str]:
@@ -89,13 +89,15 @@ def main(project: str, start: datetime, stop: datetime, api_key: str | None, wor
             row = [time_period] + [time_entries[user_id].get(time_period, '') for user_id in list(users_in_work.values())]
             sheet_data_to_send.append(row)
             
-        append_data_to_sheet(worksheet, sheet_data_to_send, current_date, users_in_work, row_index)
+        append_data_to_sheet(worksheet, sheet_data_to_send, current_date, len(users_in_work), row_index)
         
-        row_index += 98
+        row_index += 99
         current_date = (day_begin + timedelta(days=1)).strftime('%Y-%m-%d') # str: 1900-01-02
         progress_bar.update(1)
 
-    append_all_totals(worksheet, total_days, users_in_work, start, stop)
+        worksheet.append(["·"])
+
+    append_all_totals(worksheet, int(total_days), len(users_in_work), start, stop)
     workbook.save(file_path)
     progress_bar.close()
     print("")
