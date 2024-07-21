@@ -126,3 +126,17 @@ class ClockifyAPI:
         
         return time_entries
     
+    def get_users_exclusion(self, all_users: dict, project_id: str, first_day: datetime, last_day: datetime) -> dict:
+        users_appeared = set()
+        users_exclusion = {}
+        for user in all_users:
+            time_entries = self.get_time_entries_for_user(user['id'], params={'project': project_id, 'start': first_day.isoformat(), 'end': last_day.isoformat()})
+
+            if time_entries:
+                users_appeared.add(user['id'])
+
+        for user in all_users:
+            if user['id'] not in users_appeared:
+                users_exclusion[user['id']] = user['name']
+                
+        return users_exclusion
