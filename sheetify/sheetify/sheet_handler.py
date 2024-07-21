@@ -6,23 +6,21 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from datetime import datetime
-from collections import defaultdict
+from openpyxl.utils import get_column_letter
+
+from sheetify.config.pavel_settings import Settings
     
 
-def generate_total_rows(current_date: str, start_row: int, found_users: dict[str, str], num_rows: int = 96) -> list[list[str]]:
+def generate_total_rows(current_date: str, start_row: int, number_users: int, num_rows: int = 96) -> list[list[str]]:
     total_formula_row = []
-    for col_index, user in enumerate(found_users.values(), start=1):
-        column_letter = chr(ord('A') + col_index)
-
+    for col_index in range(2, number_users + 2):
+        column_letter = get_column_letter(col_index)
         count_formula = f"COUNTIF({column_letter}{start_row}:{column_letter}{start_row + num_rows - 1}, \"<>\")"
-        
         total_minutes = f"{count_formula} * 15"
         formatted_time_formula = f"=TEXT(INT({total_minutes} / 60), \"0\") & \":\" & TEXT(MOD({total_minutes}, 60), \"00\")"
-
         total_formula_row.append(formatted_time_formula)
 
-    total_row = [f'TOTAL [{current_date}]'] + total_formula_row
-    return [total_row]
+    return [[f'TOTAL [{current_date}]'] + total_formula_row]
 
 def append_data_to_sheet(worksheet: gspread.Worksheet, data: list[list[datetime | str]], current_date: str, found_users: dict[str, str], start_row: int) -> None:
     while True:
@@ -35,16 +33,18 @@ def append_data_to_sheet(worksheet: gspread.Worksheet, data: list[list[datetime 
             print(f"Error appending rows for date {current_date}: {e}")
             time.sleep(60)
 
-def append_all_totals(worksheet: gspread.Worksheet, num_days: int, found_users: dict[str, str], start_date: str, stop_date: str) -> None:
+def append_all_totals(worksheet: gspread.Worksheet, num_days: int, number_users: int, start_date: str, stop_date: str) -> None:
     total_row_start = 1
-    total_row_end = num_days + num_days * 97
+    total_row_end = num_days * 99 - 1
 
     all_total_formula_row = []
-    for col_index, user in enumerate(found_users.values(), start=1):
-        column_letter = chr(ord('A') + col_index)
+
+    for col_index in range(2, number_users + 2):
+        column_letter = get_column_letter(col_index)
+
         all_total_minutes = f"SUM(ArrayFormula(VALUE(SPLIT(FILTER({column_letter}{total_row_start}:{column_letter}{total_row_end}, REGEXMATCH(A{total_row_start}:A{total_row_end}, \"TOTAL*\")), \":\")) * {{60, 1}}))"
         formatted_time_formula = f"=TEXT(INT({all_total_minutes} / 60), \"0\") & \":\" & TEXT(MOD({all_total_minutes}, 60), \"00\")"
-
+        
         all_total_formula_row.append(formatted_time_formula)
 
     all_total_row = [f'ALL TOTAL [{start_date} / {stop_date}]'] + all_total_formula_row
@@ -88,10 +88,13 @@ class GoogleSheetAPI:
             self._authorize()
         return self.gc.open_by_key(self.spreadsheet_id)
     
-    def prepare_worksheet(self, sheet_name: str) -> gspread.Worksheet:
+    def prepare_worksheet(self, sheet_name: str, sheet_id: str = None) -> gspread.Worksheet:
         try:
             self.open_sheet().worksheet(sheet_name)
+            sheet_id = sheet_id if sheet_id else Settings.SPREADSHEET_ID
             print(f"Sheet {sheet_name} already exists.")
+            sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}"
+            print(f"Data successfully updated in Google Sheets. \nOpen the file here: {sheet_url}")
             exit(0)
         except gspread.exceptions.WorksheetNotFound:
             try:
