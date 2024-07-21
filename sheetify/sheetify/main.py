@@ -69,36 +69,42 @@ def main(project: str, start: datetime, stop: datetime, api_key: str | None, wor
 
     all_users = clockify_api.get_workspace_users()
 
-    users_by_project = clockify_api.get_workspace_users(params={'projectId': project_data['id']})
-    found_users = {user['name']: user['id'] for user in users_by_project}
+    first_day = datetime.strptime(start, '%Y-%m-%d').replace(hour=0, minute=15, second=0, microsecond=0, tzinfo=timezone.utc)
+    last_day = (datetime.strptime(stop, '%Y-%m-%d') + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=timezone.utc)
 
-    current_date = start
-    row_index = 2
+    users_exclusion = clockify_api.get_users_exclusion(all_users, project_data['id'], first_day, last_day)
+
+    users_in_work = {user['name']: user['id'] for user in all_users if user['id'] not in users_exclusion}
 
     progress_bar = tqdm(total=int(total_days), desc='Processing', unit='day', leave=True, colour='#3FDCEE', 
                         ascii=True, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}, {rate_fmt}{postfix}]')
+    
+    current_date = start
+    row_index = 2
 
     while current_date <= stop:
         day_begin = datetime.strptime(current_date, '%Y-%m-%d').replace(hour=0, minute=15, second=0, microsecond=0, tzinfo=timezone.utc) # datetime: 1900-01-01 00:15:00+02:00
         day_finish = (day_begin + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=timezone.utc) # datetime: 1900-01-02 00:00:00+02:00
-        time_entries = clockify_api.fetch_time_entries(found_users.values(), project_data['id'], day_begin, day_finish)
+        time_entries = clockify_api.fetch_time_entries(list(users_in_work.values()), project_data['id'], day_begin, day_finish)
 
-        header_row = [current_date] + list(found_users.keys())
+        header_row = [current_date] + list(users_in_work.keys())
         sheet_data_to_send = [header_row]
         
         for time_slot in range(0, 96):
             time_period = (day_begin + timedelta(minutes=15 * time_slot)).strftime('%H:%M') # str: 04:30
-            row = [time_period] + [time_entries[user_id].get(time_period, '') for user_id in found_users.values()]
+            row = [time_period] + [time_entries[user_id].get(time_period, '') for user_id in list(users_in_work.values())]
             sheet_data_to_send.append(row)
             
-        append_data_to_sheet(worksheet, sheet_data_to_send, current_date, found_users, row_index)
+        append_data_to_sheet(worksheet, sheet_data_to_send, current_date, len(users_in_work), row_index)
         
-        row_index += 98
+        row_index += 99
         current_date = (day_begin + timedelta(days=1)).strftime('%Y-%m-%d') # str: 1900-01-02
         progress_bar.update(1)
 
+        worksheet.append_row(["·"])
+
+    append_all_totals(worksheet, int(total_days), len(users_in_work), start, stop)
     progress_bar.close()
-    append_all_totals(worksheet, int(total_days), found_users, start, stop)
 
     print("")
     sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}"
