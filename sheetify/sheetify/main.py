@@ -7,7 +7,7 @@ import click
 import re
 
 from sheetify.clockify_handler import ClockifyAPI
-from sheetify.config.nikita_settings import Settings
+from sheetify.config.pavel_settings import Settings
 from sheetify.sheet_handler import GoogleSheetAPI, append_data_to_sheet, append_all_totals
 
 
@@ -47,9 +47,10 @@ def click_validate_auth_data(start_date: datetime, end_date: datetime, api_key: 
 def main(project: str, start: datetime, stop: datetime, api_key: str | None, workspace_id: str| None, google_creds: str| None, sheet_id: str| None):
     click_validate_dates(start, stop)
     click_validate_auth_data(start, stop, api_key, workspace_id, google_creds, sheet_id)
-    total_days = float((stop - start).days)
+    total_days = float((stop - start).days) + 1
     start, stop = str(start.date()), str(stop.date()) # str: 1900-01-01
     sheet_id = sheet_id if sheet_id else Settings.SPREADSHEET_ID
+    print("")
 
     clockify_api = ClockifyAPI(api_key=Settings.CLOCKIFY_API_KEY if not api_key else api_key,
                                workspace_id=Settings.CLOCKIFY_WORKSPACE_ID if not workspace_id else workspace_id)
@@ -66,13 +67,16 @@ def main(project: str, start: datetime, stop: datetime, api_key: str | None, wor
     sheet_name = f"{project_data['name']} [{start} / {stop}]"
     worksheet = sheet_api.prepare_worksheet(sheet_name)
 
+    all_users = clockify_api.get_workspace_users()
+
     users_by_project = clockify_api.get_workspace_users(params={'projectId': project_data['id']})
     found_users = {user['name']: user['id'] for user in users_by_project}
 
     current_date = start
     row_index = 2
 
-    progress_bar = tqdm(total=int(total_days), desc='Processing', unit='day')
+    progress_bar = tqdm(total=int(total_days), desc='Processing', unit='day', leave=True, colour='#3FDCEE', 
+                        ascii=True, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}, {rate_fmt}{postfix}]')
 
     while current_date <= stop:
         day_begin = datetime.strptime(current_date, '%Y-%m-%d').replace(hour=0, minute=15, second=0, microsecond=0, tzinfo=timezone.utc) # datetime: 1900-01-01 00:15:00+02:00
@@ -84,7 +88,7 @@ def main(project: str, start: datetime, stop: datetime, api_key: str | None, wor
         
         for time_slot in range(0, 96):
             time_period = (day_begin + timedelta(minutes=15 * time_slot)).strftime('%H:%M') # str: 04:30
-            row = [time_period] + [time_entries[user_id].get(time_period, '-') for user_id in found_users.values()]
+            row = [time_period] + [time_entries[user_id].get(time_period, '') for user_id in found_users.values()]
             sheet_data_to_send.append(row)
             
         append_data_to_sheet(worksheet, sheet_data_to_send, current_date, found_users, row_index)
@@ -95,8 +99,10 @@ def main(project: str, start: datetime, stop: datetime, api_key: str | None, wor
 
     progress_bar.close()
     append_all_totals(worksheet, int(total_days), found_users, start, stop)
+
+    print("")
     sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}"
-    print(f"Data successfully updated in Google Sheets. Open the file here: {sheet_url}")
+    print(f"Data successfully updated in Google Sheets. \nOpen the file here: {sheet_url}")
 
 if __name__ == '__main__':
     main()
