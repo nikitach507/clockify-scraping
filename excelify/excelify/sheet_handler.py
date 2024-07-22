@@ -63,7 +63,8 @@ def append_data_to_sheet(worksheet: Worksheet, data: list[list[str]], current_da
     apply_styles(worksheet, min_row=worksheet.max_row, max_row=worksheet.max_row, min_col=1, max_col=number_users + 1, 
                  fill_color="D9D9D9", horizontal_alignment='center', vertical_alignment='center')
 
-    apply_styles(worksheet, min_row=start_row - 1, max_row=worksheet.max_row - 1, min_col=1, max_col=number_users + 1)
+    apply_styles(worksheet, min_row=start_row - 1, max_row=worksheet.max_row - 1, min_col=1, max_col=number_users + 1, 
+                 horizontal_alignment='fill', vertical_alignment='center')
     set_column_widths(worksheet=worksheet, max_col=number_users + 1)
 
 def append_all_totals(worksheet: Worksheet, num_days: int, number_users: int, start_date: str, stop_date: str) -> None:
