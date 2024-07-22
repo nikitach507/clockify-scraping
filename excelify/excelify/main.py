@@ -66,9 +66,9 @@ def main(project: str, start: datetime, stop: datetime, api_key: str | None, wor
     first_day = datetime.strptime(start, '%Y-%m-%d').replace(hour=0, minute=15, second=0, microsecond=0, tzinfo=timezone.utc)
     last_day = (datetime.strptime(stop, '%Y-%m-%d') + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=timezone.utc)
 
-    users_exclusion = clockify_api.get_users_exclusion(all_users, project_data['id'], first_day, last_day)
-
-    users_in_work = {user['name']: user['id'] for user in all_users if user['id'] not in users_exclusion}
+    users_in_work = clockify_api.get_users_in_work(all_users, project_data['id'], first_day, last_day)
+    active_users_name = list(users_in_work.keys())
+    active_users_id = list(users_in_work.values())
 
     progress_bar = tqdm(total=int(total_days), desc='Processing', unit='day', leave=True, colour='#3FDCEE', 
                         ascii=True, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}, {rate_fmt}{postfix}]')
@@ -79,14 +79,14 @@ def main(project: str, start: datetime, stop: datetime, api_key: str | None, wor
     while current_date <= stop:
         day_begin = datetime.strptime(current_date, '%Y-%m-%d').replace(hour=0, minute=15, second=0, microsecond=0, tzinfo=timezone.utc) # datetime: 1900-01-01 00:15:00+02:00
         day_finish = (day_begin + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=timezone.utc) # datetime: 1900-01-02 00:00:00+02:00
-        time_entries = clockify_api.fetch_time_entries(list(users_in_work.values()), project_data['id'], day_begin, day_finish)
+        time_entries = clockify_api.fetch_time_entries(active_users_id, project_data['id'], day_begin, day_finish)
 
-        header_row = [current_date] + list(users_in_work.keys())
+        header_row = [current_date] + active_users_name
         sheet_data_to_send = [header_row]
         
         for time_slot in range(0, 96):
             time_period = (day_begin + timedelta(minutes=15 * time_slot)).strftime('%H:%M') # str: 04:30
-            row = [time_period] + [time_entries[user_id].get(time_period, '') for user_id in list(users_in_work.values())]
+            row = [time_period] + [time_entries[user_id].get(time_period, '') for user_id in active_users_id]
             sheet_data_to_send.append(row)
             
         append_data_to_sheet(worksheet, sheet_data_to_send, current_date, len(users_in_work), row_index)
