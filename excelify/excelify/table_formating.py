@@ -9,7 +9,7 @@ thin_border = Border(
     bottom=Side(style='thin')
 )
 
-column_widths = {1: 12.0, 2: 20.0}
+column_widths = {1: 20.0, 2: 20.0}
 
 def set_column_widths(worksheet: Worksheet, max_col: int, widths: dict[int, float] = column_widths) -> None:
     for col in range(1, max_col + 1):
@@ -24,13 +24,16 @@ def apply_styles(worksheet: Worksheet, min_row: int, max_row: int, min_col: int,
     """
 
     fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid") if fill_color else None
-    alignment = Alignment(horizontal=horizontal_alignment, vertical=vertical_alignment, wrapText=True) if horizontal_alignment or vertical_alignment else Alignment(wrapText=False, shrink_to_fit=True)
+    alignment = Alignment(horizontal=horizontal_alignment, vertical=vertical_alignment, wrapText=False) if horizontal_alignment or vertical_alignment else Alignment(wrapText=False)
     for row in worksheet.iter_rows(min_row=min_row, max_row=max_row, min_col=min_col, max_col=max_col):
         for cell in row:
             if fill:
                 cell.fill = fill
             if alignment:
-                cell.alignment = alignment
+                if not cell.value or len(str(cell.value)) <= 15:
+                    cell.alignment = Alignment(horizontal='left', vertical='center', wrapText=False)
+                else:
+                    cell.alignment = alignment
             if border:
                 cell.border = border
             else:
