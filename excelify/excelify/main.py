@@ -3,10 +3,11 @@ import os
 import click
 import re
 from tqdm import tqdm
-from openpyxl import Workbook
+from xlsxwriter import Workbook
 from excelify.clockify_handler import ClockifyAPI
 from excelify.config.pavel_settings import Settings
 from excelify.sheet_handler import append_data_to_sheet, append_all_totals
+from excelify.sheet_handler import set_column_widths
 
 
 def click_validate_dates(start_date: datetime, end_date: datetime) -> tuple[str, str]:
@@ -52,14 +53,14 @@ def main(project: str, start: datetime, stop: datetime, api_key: str | None, wor
         print(e)
         exit(0)
 
-    file_name = f"{project_data['name']} [{start} | {stop}]"
-    file_path = os.path.join(dir_path, f"{file_name}.xlsx")
+    file_name = f"{project_data['name']} [{start} | {stop}].xlsx"
+    file_path = os.path.join(dir_path, file_name)
     if os.path.exists(file_path):
         print(f"File '{file_path}' already exists. Exiting without creating a new file.")
         exit(0)
 
-    workbook = Workbook()
-    worksheet = workbook.active
+    workbook = Workbook(file_path)
+    worksheet = workbook.add_worksheet()
 
     all_users = clockify_api.get_workspace_users()
 
@@ -74,7 +75,7 @@ def main(project: str, start: datetime, stop: datetime, api_key: str | None, wor
                         ascii=True, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}, {rate_fmt}{postfix}]')
     
     current_date = start
-    row_index = 2
+    row_index = 0
 
     while current_date <= stop:
         day_begin = datetime.strptime(current_date, '%Y-%m-%d').replace(hour=0, minute=15, second=0, microsecond=0, tzinfo=timezone.utc) # datetime: 1900-01-01 00:15:00+02:00
@@ -88,23 +89,21 @@ def main(project: str, start: datetime, stop: datetime, api_key: str | None, wor
             time_period = (day_begin + timedelta(minutes=15 * time_slot)).strftime('%H:%M') # str: 04:30
             row = [time_period] + [time_entries[user_id].get(time_period, '') for user_id in active_users_id]
             sheet_data_to_send.append(row)
-            
-        append_data_to_sheet(worksheet, sheet_data_to_send, current_date, len(users_in_work), row_index)
         
-        row_index += 99
+        append_data_to_sheet(worksheet, workbook, sheet_data_to_send, current_date, len(users_in_work), row_index)
+
         current_date = (day_begin + timedelta(days=1)).strftime('%Y-%m-%d') # str: 1900-01-02
         progress_bar.update(1)
+        row_index += 99
 
-        worksheet.append(["·"])
-
-    append_all_totals(worksheet, int(total_days), len(users_in_work), start, stop)
-    workbook.save(file_path)
+    append_all_totals(worksheet, workbook, int(total_days), len(users_in_work), row_index, start, stop)
     progress_bar.close()
     print("")
 
     file_url = f'file://{os.path.abspath(file_path)}'
     print(f"Data successfully updated in the Excel file. \nOpen the file here: {file_url}")
-    
+    set_column_widths(worksheet, len(active_users_name) + 1, {1: 12.0, 2: 20.0})
+    workbook.close()
 
 if __name__ == '__main__':
     main()
