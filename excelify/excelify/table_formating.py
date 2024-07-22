@@ -24,7 +24,7 @@ def apply_styles(worksheet: Worksheet, min_row: int, max_row: int, min_col: int,
     """
 
     fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid") if fill_color else None
-    alignment = Alignment(horizontal=horizontal_alignment, vertical=vertical_alignment, wrapText=True) if horizontal_alignment or vertical_alignment else Alignment(wrapText=True)
+    alignment = Alignment(horizontal=horizontal_alignment, vertical=vertical_alignment, wrapText=True) if horizontal_alignment or vertical_alignment else Alignment(wrapText=False, shrink_to_fit=True)
     for row in worksheet.iter_rows(min_row=min_row, max_row=max_row, min_col=min_col, max_col=max_col):
         for cell in row:
             if fill:
