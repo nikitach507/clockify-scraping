@@ -74,8 +74,11 @@ def main(project: str, start: datetime, stop: datetime, api_key: str | None, wor
     progress_bar = tqdm(total=int(total_days), desc='Processing', unit='day', leave=True, colour='#3FDCEE', 
                         ascii=True, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}, {rate_fmt}{postfix}]')
     
+    worksheet.write_row(0, 0, [f"HARDWARIO Report for Period from 2024-07-01 to 2024-07-31"])
+    worksheet.write_row(0, 0, [""])
+    
     current_date = start
-    row_index = 0
+    row_index = 2
 
     while current_date <= stop:
         day_begin = datetime.strptime(current_date, '%Y-%m-%d').replace(hour=0, minute=15, second=0, microsecond=0, tzinfo=timezone.utc) # datetime: 1900-01-01 00:15:00+02:00
@@ -96,13 +99,13 @@ def main(project: str, start: datetime, stop: datetime, api_key: str | None, wor
         progress_bar.update(1)
         row_index += 99
 
-    append_all_totals(worksheet, workbook, int(total_days), len(users_in_work), row_index, start, stop)
+    append_all_totals(worksheet, workbook, int(total_days), active_users_name, row_index, start, stop)
     progress_bar.close()
     print("")
 
     file_url = f'file://{os.path.abspath(file_path)}'
     print(f"Data successfully updated in the Excel file. \nOpen the file here: {file_url}")
-    set_column_widths(worksheet, len(active_users_name) + 1, {1: 12.0, 2: 20.0})
+    set_column_widths(worksheet, len(active_users_name) + 1, {1: 20.0, 2: 20.0})
     workbook.close()
 
 if __name__ == '__main__':
