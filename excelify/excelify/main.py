@@ -68,14 +68,19 @@ def main(project: str, start: datetime, stop: datetime, api_key: str | None, wor
     last_day = (datetime.strptime(stop, '%Y-%m-%d') + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=timezone.utc)
 
     users_in_work = clockify_api.get_users_in_work(all_users, project_data['id'], first_day, last_day)
+    if not users_in_work:
+        print("No users found in the project for the given period. The table will be created on the basis of an empty user.")
+        users_in_work["User"] = 0
+        
     active_users_name = list(users_in_work.keys())
     active_users_id = list(users_in_work.values())
 
     progress_bar = tqdm(total=int(total_days), desc='Processing', unit='day', leave=True, colour='#3FDCEE', 
                         ascii=True, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}, {rate_fmt}{postfix}]')
     
-    worksheet.write_row(0, 0, [f"HARDWARIO Report for Period from 2024-07-01 to 2024-07-31"])
-    worksheet.write_row(0, 0, [""])
+    worksheet.write_row(0, 0, [f"HARDWARIO Report for Period from {start} to {stop}"] + [""] * len(active_users_name), 
+                        workbook.add_format({'bold': True, 'font_size': 20, 'bg_color': 'FFC7CE', 'color': '9C0006'}))
+    worksheet.write_row(1, 0, [""])
     
     current_date = start
     row_index = 2
