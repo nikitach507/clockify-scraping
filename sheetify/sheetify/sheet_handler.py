@@ -8,7 +8,7 @@ from google.auth.transport.requests import Request
 from datetime import datetime
 from openpyxl.utils import get_column_letter
 
-from sheetify.config.pavel_settings import Settings
+from sheetify.config.settings import SPREADSHEET_ID
     
 
 def generate_total_rows(current_date: str, start_row: int, number_users: int, num_rows: int = 96) -> list[list[str]]:
@@ -91,7 +91,7 @@ class GoogleSheetAPI:
     def prepare_worksheet(self, sheet_name: str, sheet_id: str = None) -> gspread.Worksheet:
         try:
             self.open_sheet().worksheet(sheet_name)
-            sheet_id = sheet_id if sheet_id else Settings.SPREADSHEET_ID
+            sheet_id = sheet_id if sheet_id else SPREADSHEET_ID
             print(f"Sheet {sheet_name} already exists.")
             sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}"
             print(f"Data successfully updated in Google Sheets. \nOpen the file here: {sheet_url}")

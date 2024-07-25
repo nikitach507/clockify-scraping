@@ -1,7 +1,7 @@
 import click
 import pytz
 import requests
-from excelify.config.pavel_settings import Settings
+from excelify.config.settings import CLOCKIFY_BASE_URL
 from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 
@@ -50,7 +50,7 @@ class ClockifyAPI:
             dict: The response JSON
 
         """
-        url = f"{Settings.CLOCKIFY_BASE_URL}/workspaces/{self.workspace_id}/users"
+        url = f"{CLOCKIFY_BASE_URL}/workspaces/{self.workspace_id}/users"
         try:
             response = requests.get(url, headers=self.headers, params=params)
 
@@ -71,7 +71,7 @@ class ClockifyAPI:
             dict: The response JSON
 
         """
-        url = f"{Settings.CLOCKIFY_BASE_URL}/workspaces/{self.workspace_id}/projects"
+        url = f"{CLOCKIFY_BASE_URL}/workspaces/{self.workspace_id}/projects"
         response = requests.get(url, headers=self.headers, params=params)
         return response.json()
     
@@ -95,7 +95,7 @@ class ClockifyAPI:
             dict: The response JSON
 
         """
-        url = f"{Settings.CLOCKIFY_BASE_URL}/workspaces/{self.workspace_id}/user/{user_id}/time-entries"
+        url = f"{CLOCKIFY_BASE_URL}/workspaces/{self.workspace_id}/user/{user_id}/time-entries"
         response = requests.get(url, headers=self.headers, params=params)
         return response.json()
     
@@ -104,7 +104,7 @@ class ClockifyAPI:
 
         for user_id in users_id:
             time_entries_by_user = self.get_time_entries_for_user(user_id, params={'project': project_id, 'start': start_of_day.isoformat(), 'end': end_of_day.isoformat()})
-            
+
             if 'message' in time_entries_by_user.keys() and user_id == 0:
                 time_entries[user_id] = {}
                 return time_entries

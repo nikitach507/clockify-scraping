@@ -1,7 +1,7 @@
 import click
 import pytz
 import requests
-from sheetify.config.nikita_settings import Settings
+from sheetify.config.settings import CLOCKIFY_BASE_URL
 from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 
@@ -50,7 +50,7 @@ class ClockifyAPI:
             dict: The response JSON
 
         """
-        url = f"{Settings.CLOCKIFY_BASE_URL}/workspaces/{self.workspace_id}/users"
+        url = f"{CLOCKIFY_BASE_URL}/workspaces/{self.workspace_id}/users"
         try:
             response = requests.get(url, headers=self.headers, params=params)
 
@@ -71,7 +71,7 @@ class ClockifyAPI:
             dict: The response JSON
 
         """
-        url = f"{Settings.CLOCKIFY_BASE_URL}/workspaces/{self.workspace_id}/projects"
+        url = f"{CLOCKIFY_BASE_URL}/workspaces/{self.workspace_id}/projects"
         response = requests.get(url, headers=self.headers, params=params)
         return response.json()
     
@@ -95,7 +95,7 @@ class ClockifyAPI:
             dict: The response JSON
 
         """
-        url = f"{Settings.CLOCKIFY_BASE_URL}/workspaces/{self.workspace_id}/user/{user_id}/time-entries"
+        url = f"{CLOCKIFY_BASE_URL}/workspaces/{self.workspace_id}/user/{user_id}/time-entries"
         response = requests.get(url, headers=self.headers, params=params)
         return response.json()
     

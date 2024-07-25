@@ -7,7 +7,7 @@ import click
 import re
 
 from sheetify.clockify_handler import ClockifyAPI
-from sheetify.config.pavel_settings import Settings
+from sheetify.config.settings import SPREADSHEET_ID, CLOCKIFY_API_KEY, CLOCKIFY_WORKSPACE_ID, GOOGLE_SHEETS_CREDENTIALS_FILE, GOOGLE_OAUTH_TOKEN_FILE
 from sheetify.sheet_handler import GoogleSheetAPI, append_data_to_sheet, append_all_totals
 
 
@@ -49,14 +49,14 @@ def main(project: str, start: datetime, stop: datetime, api_key: str | None, wor
     click_validate_auth_data(start, stop, api_key, workspace_id, google_creds, sheet_id)
     total_days = float((stop - start).days) + 1
     start, stop = str(start.date()), str(stop.date()) # str: 1900-01-01
-    sheet_id = sheet_id if sheet_id else Settings.SPREADSHEET_ID
+    sheet_id = sheet_id if sheet_id else SPREADSHEET_ID
     print("")
 
-    clockify_api = ClockifyAPI(api_key=Settings.CLOCKIFY_API_KEY if not api_key else api_key,
-                               workspace_id=Settings.CLOCKIFY_WORKSPACE_ID if not workspace_id else workspace_id)
+    clockify_api = ClockifyAPI(api_key=CLOCKIFY_API_KEY if not api_key else api_key,
+                               workspace_id=CLOCKIFY_WORKSPACE_ID if not workspace_id else workspace_id)
     sheet_api = GoogleSheetAPI(spreadsheet_id=sheet_id,
-                               credentials_path=Settings.GOOGLE_SHEETS_CREDENTIALS_FILE if not google_creds else google_creds, 
-                               token_path=Settings.GOOGLE_OAUTH_TOKEN_FILE)
+                               credentials_path=GOOGLE_SHEETS_CREDENTIALS_FILE if not google_creds else google_creds, 
+                               token_path=GOOGLE_OAUTH_TOKEN_FILE)
     
     try:
         project_data = clockify_api.initialize_project_data(project)

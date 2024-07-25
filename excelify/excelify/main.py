@@ -5,7 +5,7 @@ import re
 from tqdm import tqdm
 from xlsxwriter import Workbook
 from excelify.clockify_handler import ClockifyAPI
-from excelify.config.pavel_settings import Settings
+from excelify.config.settings import CLOCKIFY_API_KEY, CLOCKIFY_WORKSPACE_ID, EXCEL_DIRECTORY
 from excelify.sheet_handler import append_data_to_sheet, append_all_totals
 from excelify.sheet_handler import set_column_widths
 
@@ -39,15 +39,15 @@ def click_validate_auth_data(api_key: str, workspace_id: str, dir_path: str) -> 
 @click.option('--dir_path', prompt=False, help='Path to directory where the Excel file will be saved')
 def main(project: str, start: datetime, stop: datetime, api_key: str | None, workspace_id: str| None, dir_path: str| None):
     print("")
-    dir_path = dir_path if dir_path else Settings.EXCEL_DIRECTORY
+    dir_path = dir_path if dir_path else EXCEL_DIRECTORY
 
     try:
         total_days = float((stop - start).days) + 1
         start, stop = click_validate_dates(start, stop) # str: 1900-01-01
         click_validate_auth_data(api_key, workspace_id, dir_path)
 
-        clockify_api = ClockifyAPI(api_key=Settings.CLOCKIFY_API_KEY if not api_key else api_key,
-                                   workspace_id=Settings.CLOCKIFY_WORKSPACE_ID if not workspace_id else workspace_id)
+        clockify_api = ClockifyAPI(api_key=CLOCKIFY_API_KEY if not api_key else api_key,
+                                   workspace_id=CLOCKIFY_WORKSPACE_ID if not workspace_id else workspace_id)
         project_data = clockify_api.initialize_project_data(project)
     except click.BadParameter as e:
         print(e)
