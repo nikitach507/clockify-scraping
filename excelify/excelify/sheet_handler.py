@@ -56,17 +56,19 @@ def generate_all_totals(number_users: int, num_days: int, start_date: str, stop_
     return all_total_row, all_buffers_rows
     
 def append_data_to_sheet(worksheet,  workbook: Workbook, data: list, current_date: str, users_in_work: int, start_row: int) -> None:
-    format_special_cell = workbook.add_format({'align': 'center', 'valign': 'vcenter', 'border': 1, 'bold': True})
-    format_small_fill = workbook.add_format({'align': 'left', 'valign': 'vcenter', 'border': 1})
-    format_description = workbook.add_format({'align': 'fill', 'valign': 'vcenter', 'border': 1, 'text_wrap': False, 'shrink': True})
-    format_total = workbook.add_format({'align': 'center', 'valign': 'vcenter', 'bg_color': 'D9D9D9', 'border': 1, 'bold': True})
+    format_table_header = workbook.add_format({'align': 'center', 'valign': 'vcenter', 'border': 1, 'bold': True, 'bg_color': '006100', 'color': 'FFFFFF', 'font_size': 13})
+    format_time_period = workbook.add_format({'align': 'center', 'valign': 'vcenter', 'border': 1, 'bold': True})
+    format_small_description = workbook.add_format({'align': 'left', 'valign': 'vcenter', 'border': 1})
+    format_big_description = workbook.add_format({'align': 'fill', 'valign': 'vcenter', 'border': 1, 'text_wrap': False, 'shrink': True})
+    format_total = workbook.add_format({'align': 'center', 'valign': 'vcenter', 'border': 1, 'bold': True, 'bg_color': 'DFF0E2', 'color': '006100'})
 
     row_index = start_row + 99
 
     for row_idx, row in enumerate(data):
-        row_format = [format_small_fill if not cell else format_special_cell 
-                                        if col == 0 or row_idx == 0 else format_small_fill 
-                                        if len(cell) <= 10 else format_description 
+        row_format = [format_small_description if not cell else format_table_header 
+                                        if row_idx == 0 else format_time_period
+                                        if col == 0  else format_small_description 
+                                        if len(cell) <= 10 else format_big_description 
                                         for col, cell in enumerate(row)]
         
         for col_index, (cell_value, format_row) in enumerate(zip(row, row_format)):
@@ -79,10 +81,10 @@ def append_data_to_sheet(worksheet,  workbook: Workbook, data: list, current_dat
     worksheet.write(row_index - 1, 0, "")
 
 def append_all_totals(worksheet, workbook: Workbook, num_days: int, active_users_name: list, start_row: int, start_date: str, stop_date: str) -> None:
-    format_total_name = workbook.add_format({'align': 'left', 'valign': 'vcenter', 'border': 1, 'bg_color': 'DDD9C4', 'bold': True})
-    format_all_total = workbook.add_format({'align': 'center', 'valign': 'vcenter', 'bg_color': 'DDD9C4', 'border': 1, 'bold': True})
-    format_buffer_name = workbook.add_format({'align': 'left', 'valign': 'vcenter', 'border': 1, 'bold': True})
-    format_buffer = workbook.add_format({'align': 'center', 'valign': 'vcenter', 'border': 1, 'bold': True})
+    format_total_name = workbook.add_format({'align': 'center', 'valign': 'vcenter', 'border': 1, 'bold': True, 'bg_color': 'AC3A4D', 'color': 'FFDBE0'})
+    format_all_total = workbook.add_format({'align': 'center', 'valign': 'vcenter', 'border': 1, 'bold': True, 'bg_color': 'AC3A4D', 'color': 'FFDBE0', 'font_size': 13})
+    format_buffer_name = workbook.add_format({'align': 'left', 'valign': 'vcenter', 'border': 1, 'bold': True, 'bg_color': 'FFE3E6', 'color': '9C0006'})
+    format_buffer = workbook.add_format({'align': 'center', 'valign': 'vcenter', 'border': 1, 'bold': True, 'bg_color': 'FFE3E6', 'color': '9C0006'})
 
     all_totals, all_buffer = generate_all_totals(len(active_users_name), num_days, start_date, stop_date)
 
