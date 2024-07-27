@@ -5,7 +5,7 @@ import re
 from tqdm import tqdm
 from xlsxwriter import Workbook
 from excelify.clockify_handler import ClockifyAPI
-from excelify.config.settings import CLOCKIFY_API_KEY, CLOCKIFY_WORKSPACE_ID, EXCEL_DIRECTORY
+from excelify.config.settings import CLOCKIFY_API_KEY, CLOCKIFY_WORKSPACE_ID, EXCEL_DIRECTORY, WORKSPACE_NAME
 from excelify.sheet_handler import append_data_to_sheet, append_all_totals
 from excelify.sheet_handler import set_column_widths
 
@@ -78,8 +78,12 @@ def main(project: str, start: datetime, stop: datetime, api_key: str | None, wor
     progress_bar = tqdm(total=int(total_days), desc='Processing', unit='day', leave=True, colour='#3FDCEE', 
                         ascii=True, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}, {rate_fmt}{postfix}]')
     
-    worksheet.write_row(0, 0, [f"HARDWARIO Report for Period from {start} to {stop}"] + [""] * len(active_users_name), 
+    if WORKSPACE_NAME is None:
+        worksheet.write_row(0, 0, [f"Report for Period from {start} to {stop}"] + [""] * len(active_users_name), 
                         workbook.add_format({'bold': True, 'font_size': 20, 'bg_color': 'FFC7CE', 'color': '9C0006'}))
+    else:
+        worksheet.write_row(0, 0, [f"{WORKSPACE_NAME} Report for Period from {start} to {stop}"] + [""] * len(active_users_name), 
+                            workbook.add_format({'bold': True, 'font_size': 20, 'bg_color': 'FFC7CE', 'color': '9C0006'}))
     worksheet.write_row(1, 0, [""])
     
     current_date = start
