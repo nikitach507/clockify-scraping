@@ -16,17 +16,29 @@ With Excelify, you can automate the process of retrieving time logs, formatting 
 
 ## Project Features
 
-- **Clockify API Integration**: Seamlessly connects to the Clockify API to retrieve time tracking data for specified projects and dates.
+- **Clockify API Integration**: 
 
-- **Customizable Date Ranges**: Allows users to specify the start and end dates for the report, ensuring flexibility in data extraction.
+    Seamlessly connects to the Clockify API to retrieve time tracking data for specified projects and dates.
 
-- **Project-Based Reporting**: Generates reports based on specific projects, providing insights into time spent by users on project tasks.
+- **Customizable Date Ranges**: 
 
-- **Detailed Time Entries**: Formats time tracking data into 15-minute intervals, offering granular insights into user activities.
+    Allows users to specify the start and end dates for the report, ensuring flexibility in data extraction.
 
-- **Excel Report Generation**: Creates well-structured Excel files with detailed tables, including headers, time slots, and user-specific data.
+- **Project-Based Reporting**: 
 
-- **Summary and Totals**: Computes and includes summary totals and overall time spent, both daily and for the entire report period.
+    Generates reports based on specific projects, providing insights into time spent by users on project tasks.
+
+- **Detailed Time Entries**: 
+
+    Formats time tracking data into 15-minute intervals, offering granular insights into user activities.
+
+- **Excel Report Generation**: 
+
+    Creates well-structured Excel files with detailed tables, including headers, time slots, and user-specific data.
+
+- **Summary and Totals**: 
+
+    Computes and includes summary totals and overall time spent, both daily and for the entire report period.
 
 ## Installation and Setup
 
@@ -109,7 +121,7 @@ The Excelify package offers the following features and options for generating Ex
 
 ### Command-Line Options
 
-- ``` -p, --project (required)```:
+- ```-p, --project (required)```:
 
     **Description**: Name of the project to generate the report for. \
     **Example**: -p "ProjectName"
