@@ -104,28 +104,29 @@ class ClockifyAPI:
 
         for user_id in users_id:
             time_entries_by_user = self.get_time_entries_for_user(user_id, params={'project': project_id, 'start': start_of_day.isoformat(), 'end': end_of_day.isoformat()})
+            if isinstance(time_entries_by_user, dict):
+                if 'message' in time_entries_by_user:
+                    if user_id == 0:
+                        time_entries[user_id] = {}
+                        return time_entries
+                    raise click.BadParameter(f'User with ID {user_id} does not have any time entries for the given period.')
+            elif isinstance(time_entries_by_user, list):
+                for time_entry in time_entries_by_user:
+                    start_of_work = self.convert_to_local_time(datetime.fromisoformat(time_entry['timeInterval']['start']).replace(tzinfo=timezone.utc)) # datetime: 1900-01-01 04:31:00+02:00
+                    end_of_work = self.convert_to_local_time(datetime.now(timezone.utc).replace(tzinfo=timezone.utc) 
+                                                        if time_entry['timeInterval']['end'] is None 
+                                                        else datetime.fromisoformat(time_entry['timeInterval']['end']).replace(tzinfo=timezone.utc)) # datetime: 1900-01-01 04:41:00+02:00
 
-            if 'message' in time_entries_by_user.keys() and user_id == 0:
-                time_entries[user_id] = {}
-                return time_entries
-            elif time_entries_by_user.keys() == 'message':
-                raise click.BadParameter(f'User with ID {user_id} does not have any time entries for the given period.')
-
-            for time_entry in time_entries_by_user:
-                start_of_work = self.convert_to_local_time(datetime.fromisoformat(time_entry['timeInterval']['start']).replace(tzinfo=timezone.utc)) # datetime: 1900-01-01 04:31:00+02:00
-                end_of_work = self.convert_to_local_time(datetime.now(timezone.utc).replace(tzinfo=timezone.utc) 
-                                                    if time_entry['timeInterval']['end'] is None 
-                                                    else datetime.fromisoformat(time_entry['timeInterval']['end']).replace(tzinfo=timezone.utc)) # datetime: 1900-01-01 04:41:00+02:00
-
-                
-                start_of_work = self.round_time_to_nearest_quarter(start_of_work, round_up=True) # datetime: 1900-01-01 04:30:00+02:00
-                if end_of_work.minute % 15 != 0:
-                    end_of_work = self.round_time_to_nearest_quarter(end_of_work, round_up=True) # datetime: 1900-01-01 04:45:00+02:00
-                
-                while start_of_work <= end_of_work:
-                    time_slot = start_of_work.strftime('%H:%M') # str: 04:30
-                    time_entries[user_id][time_slot] = time_entry['description']
-                    start_of_work += timedelta(minutes=15) # datetime: 1900-01-01 04:45:00+02:00
+                    start_of_work = self.round_time_to_nearest_quarter(start_of_work, round_up=True) # datetime: 1900-01-01 04:30:00+02:00
+                    if end_of_work.minute % 15 != 0:
+                        end_of_work = self.round_time_to_nearest_quarter(end_of_work, round_up=True) # datetime: 1900-01-01 04:45:00+02:00
+                    
+                    while start_of_work <= end_of_work:
+                        time_slot = start_of_work.strftime('%H:%M') # str: 04:30
+                        time_entries[user_id][time_slot] = time_entry['description']
+                        start_of_work += timedelta(minutes=15) # datetime: 1900-01-01 04:45:00+02:00
+            else:
+                raise ValueError(f"Unexpected response type: {type(time_entries_by_user)}")
         
         return time_entries
 
