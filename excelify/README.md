@@ -79,7 +79,16 @@ Update the configuration settings to match your environment and requirements.
 
 To configure Excelify, you need to update the settings in the `settings.py` file located in the `config` directory. The following parameters must be set:
 
-1. **Clockify API Key**:
+1. **Workspace Name**
+
+    This optional parameter allows you to include a specific name for the workspace in the generated Excel reports. If not set, a default label will be used.
+
+    ```python
+    WORKSPACE_NAME = 'your_workspace_name'
+    ```
+    > Set to None if you don't want to include a workspace name.
+
+2. **Clockify API Key**:
 
     This is your personal API key for accessing the Clockify API.
 
@@ -89,7 +98,7 @@ To configure Excelify, you need to update the settings in the `settings.py` file
 
     > You can obtain your Clockify API key from: Clockify account -> Preferences -> Advanced -> API.
 
-2. **Clockify Base URL**:
+3. **Clockify Base URL**:
 
     This is the base URL for the Clockify API. Typically, this should not need to be changed.
 
@@ -97,7 +106,7 @@ To configure Excelify, you need to update the settings in the `settings.py` file
     CLOCKIFY_BASE_URL = 'https://api.clockify.me/api/v1'
     ```
 
-3. **Clockify Workspace ID**:
+4. **Clockify Workspace ID**:
 
     This is the ID of the workspace you want to work with in Clockify. Replace the placeholder with your actual workspace ID.
 
@@ -107,7 +116,7 @@ To configure Excelify, you need to update the settings in the `settings.py` file
 
     > You can obtain your Clockify Workspace ID from: Workspaces -> Settings -> Get ID from URL.
 
-4. **Excel Directory**: 
+5. **Excel Directory**: 
 
     This is the directory where Excelify will save the generated Excel files.
 
