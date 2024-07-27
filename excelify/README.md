@@ -109,32 +109,32 @@ The Excelify package offers the following features and options for generating Ex
 
 ### Command-Line Options
 
-- -p, --project (required): 
+- ``` -p, --project (required)```:
 
     **Description**: Name of the project to generate the report for. \
     **Example**: -p "ProjectName"
 
-- -s, --start (required):
+- ```-s, --start (required)```:
 
     **Description**: Start date for the report in YYYY-MM-DD format. \
     **Example**: -s 2023-01-01
 
-- -e, --stop (required):
+- ```-e, --stop (required)```:
 
     **Description**: End date for the report in YYYY-MM-DD format. \
     **Example**: -e 2023-01-31
 
-- --api-key (optional):
+- ```--api-key (optional)```:
 
     **Description**: Clockify API key for authentication. If not provided, the default value from settings will be used. \
     **Example**: --api-key your_clockify_api_key
 
-- --workspace-id (optional):
+- ```--workspace-id (optional)```:
 
     **Description**: Clockify workspace ID. If not provided, the default value from settings will be used. \
     **Example**: --workspace-id your_clockify_workspace_id
 
-- --dir_path (optional):
+- ```--dir_path (optional)```:
 
     **Description**: Directory path where the Excel file will be saved. If not provided, the default value from settings will be used. \
     **Example**: --dir_path /path/to/directory
