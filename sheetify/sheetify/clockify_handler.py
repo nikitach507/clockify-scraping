@@ -103,8 +103,7 @@ class ClockifyAPI:
         time_entries = defaultdict(lambda: defaultdict(str))
 
         for user_id in users_id:
-            time_entries_by_user = self.get_time_entries_for_user(user_id, params={'project': project_id})
-
+            time_entries_by_user = self.get_time_entries_for_user(user_id, params={'project': project_id, 'start': start_of_day.isoformat(), 'end': end_of_day.isoformat()})
             for time_entry in time_entries_by_user:
                 start_of_work = self.convert_to_local_time(datetime.fromisoformat(time_entry['timeInterval']['start']).replace(tzinfo=timezone.utc)) # datetime: 1900-01-01 04:31:00+02:00
                 end_of_work = self.convert_to_local_time(datetime.now(timezone.utc).replace(tzinfo=timezone.utc) 
