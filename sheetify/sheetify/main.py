@@ -1,14 +1,12 @@
-from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from tqdm import tqdm
 import json
 import os
 import click
 import re
-
 from sheetify.clockify_handler import ClockifyAPI
-from sheetify.config.settings import SPREADSHEET_ID, CLOCKIFY_API_KEY, CLOCKIFY_WORKSPACE_ID, GOOGLE_SHEETS_CREDENTIALS_FILE, GOOGLE_OAUTH_TOKEN_FILE
-from sheetify.sheet_handler import GoogleSheetAPI, append_data_to_sheet, append_all_totals
+from sheetify.config.settings import SPREADSHEET_ID, CLOCKIFY_API_KEY, CLOCKIFY_WORKSPACE_ID, GOOGLE_SHEETS_CREDENTIALS_FILE, GOOGLE_OAUTH_TOKEN_FILE, WORKSPACE_NAME
+from sheetify.sheet_handler import GoogleSheetAPI, append_table_to_sheet, append_all_totals, safety_append_rows
 
 
 def click_validate_dates(start_date: datetime, end_date: datetime) -> None:
@@ -75,35 +73,41 @@ def main(project: str, start: datetime, stop: datetime, api_key: str | None, wor
     users_exclusion = clockify_api.get_users_exclusion(all_users, project_data['id'], first_day, last_day)
 
     users_in_work = {user['name']: user['id'] for user in all_users if user['id'] not in users_exclusion}
+    active_users_name = list(users_in_work.keys())
+    active_users_id = list(users_in_work.values())
 
     progress_bar = tqdm(total=int(total_days), desc='Processing', unit='day', leave=True, colour='#3FDCEE', 
                         ascii=True, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}, {rate_fmt}{postfix}]')
     
+    if WORKSPACE_NAME is None:
+        safety_append_rows(worksheet, [f"Report for Period from {start} to {stop}"] + [""], row=True)
+    else:
+        safety_append_rows(worksheet, [f"{WORKSPACE_NAME} Report for Period from {start} to {stop}"] + [""], row=True)
+
+    safety_append_rows(worksheet, ["·"], row=True)
     current_date = start
-    row_index = 2
+    row_index = 4
 
     while current_date <= stop:
         day_begin = datetime.strptime(current_date, '%Y-%m-%d').replace(hour=0, minute=15, second=0, microsecond=0, tzinfo=timezone.utc) # datetime: 1900-01-01 00:15:00+02:00
         day_finish = (day_begin + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=timezone.utc) # datetime: 1900-01-02 00:00:00+02:00
-        time_entries = clockify_api.fetch_time_entries(list(users_in_work.values()), project_data['id'], day_begin, day_finish)
+        time_entries = clockify_api.fetch_time_entries(active_users_id, project_data['id'], day_begin, day_finish)
 
-        header_row = [current_date] + list(users_in_work.keys())
+        header_row = [current_date] + active_users_name
         sheet_data_to_send = [header_row]
         
         for time_slot in range(0, 96):
             time_period = (day_begin + timedelta(minutes=15 * time_slot)).strftime('%H:%M') # str: 04:30
-            row = [time_period] + [time_entries[user_id].get(time_period, '') for user_id in list(users_in_work.values())]
+            row = [time_period] + [time_entries[user_id].get(time_period, '') for user_id in active_users_id]
             sheet_data_to_send.append(row)
             
-        append_data_to_sheet(worksheet, sheet_data_to_send, current_date, len(users_in_work), row_index)
-        
+        append_table_to_sheet(worksheet, sheet_data_to_send, current_date, len(users_in_work), row_index)
+        safety_append_rows(worksheet, ["·"], row=True)
         row_index += 99
         current_date = (day_begin + timedelta(days=1)).strftime('%Y-%m-%d') # str: 1900-01-02
         progress_bar.update(1)
-
-        worksheet.append_row(["·"])
-
-    append_all_totals(worksheet, int(total_days), len(users_in_work), start, stop)
+        
+    append_all_totals(worksheet, int(total_days), users_in_work, start, stop)
     progress_bar.close()
 
     print("")
