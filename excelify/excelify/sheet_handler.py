@@ -43,8 +43,8 @@ def generate_all_totals(number_users: int, num_days: int, start_date: str, stop_
         buffer_rows.append(f"=TEXT(INT(({'+'.join(buffer_minutes_formula)}) / 60), \"0\") & \":\" & TEXT(MOD(({'+'.join(buffer_minutes_formula)}), 60), \"00\")")
         
         join_buffer_cell = '+'.join(
-            [f"LEFT({column_letter}{total_row_end + idx + 3},FIND(\":\",{column_letter}{total_row_end + idx + 3})-1)*60+"
-             f"RIGHT({column_letter}{total_row_end + idx + 3},LEN({column_letter}{total_row_end + idx + 3})-FIND(\":\",{column_letter}{total_row_end + idx + 3}))" 
+            [f"LEFT({column_letter}{total_row_end + idx + 4},FIND(\":\",{column_letter}{total_row_end + idx + 4})-1)*60+"
+             f"RIGHT({column_letter}{total_row_end + idx + 4},LEN({column_letter}{total_row_end + idx + 4})-FIND(\":\",{column_letter}{total_row_end + idx + 4}))" 
             for idx in range(len(buffer_rows))]
         )
 
@@ -89,11 +89,11 @@ def append_all_totals(worksheet, workbook: Workbook, num_days: int, active_users
     all_totals, all_buffer = generate_all_totals(len(active_users_name), num_days, start_date, stop_date)
 
     header_row = ["ALL TOTAL"] + active_users_name
-    worksheet.write_row(start_row - 1, 0, header_row, format_all_total)
+    worksheet.write_row(start_row, 0, header_row, format_all_total)
 
     for col, value in enumerate(all_totals):
         cell_format = format_total_name if col == 0 else format_all_total
-        worksheet.write(start_row, col, value, cell_format)
+        worksheet.write(start_row + 1, col, value, cell_format)
     
     start_row += 1
 
@@ -116,4 +116,4 @@ def append_all_totals(worksheet, workbook: Workbook, num_days: int, active_users
 
         for col, value in enumerate(buffer_row):
             cell_format = format_buffer_name if col == 0 else format_buffer
-            worksheet.write(start_row + number, col, value, cell_format)
+            worksheet.write(start_row + number + 1, col, value, cell_format)
