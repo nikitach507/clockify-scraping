@@ -7,9 +7,21 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from datetime import datetime
 from openpyxl.utils import get_column_letter
-
 from sheetify.config.settings import SPREADSHEET_ID
-    
+import gspread
+
+
+def safety_append_rows(worksheet: gspread.Worksheet, data: list[list[str]], value_input_option: str = None, row: bool = False) -> None:
+    while True:
+        try:
+            if row:
+                worksheet.append_row(data, value_input_option=value_input_option) if value_input_option else worksheet.append_row(data)
+            else:
+                worksheet.append_rows(data, value_input_option=value_input_option) if value_input_option else worksheet.append_rows(data)
+            break
+        except gspread.exceptions.APIError as e:
+            print("Data write is temporarily paused due to exceeding API request limits. \nThe system will resume operation after a short delay...")
+            time.sleep(60)
 
 def generate_total_rows(current_date: str, start_row: int, number_users: int, num_rows: int = 96) -> list[list[str]]:
     total_formula_row = []
@@ -22,24 +34,19 @@ def generate_total_rows(current_date: str, start_row: int, number_users: int, nu
 
     return [[f'TOTAL [{current_date}]'] + total_formula_row]
 
-def append_data_to_sheet(worksheet: gspread.Worksheet, data: list[list[datetime | str]], current_date: str, found_users: dict[str, str], start_row: int) -> None:
-    while True:
-        try:
-            worksheet.append_rows(data, value_input_option='USER_ENTERED')
-            total_rows = generate_total_rows(current_date, start_row, found_users)
-            worksheet.append_rows(total_rows, value_input_option='USER_ENTERED')
-            break
-        except gspread.exceptions.APIError as e:
-            print(f"Error appending rows for date {current_date}: {e}")
-            time.sleep(60)
+def append_table_to_sheet(worksheet: gspread.Worksheet, data: list[list[datetime | str]], current_date: str, found_users: dict[str, str], start_row: int) -> None:
+    
+    safety_append_rows(worksheet, data, value_input_option='USER_ENTERED')
+    total_rows = generate_total_rows(current_date, start_row, found_users)
+    safety_append_rows(worksheet, total_rows, value_input_option='USER_ENTERED')
 
-def append_all_totals(worksheet: gspread.Worksheet, num_days: int, number_users: int, start_date: str, stop_date: str) -> None:
-    total_row_start = 1
-    total_row_end = num_days * 99 - 1
+def append_all_totals(worksheet: gspread.Worksheet, num_days: int, users_in_work: dict, start_date: str, stop_date: str) -> None:
+    total_row_start = 3
+    total_row_end = num_days * 99 + 1
 
     all_total_formula_row = []
 
-    for col_index in range(2, number_users + 2):
+    for col_index in range(2, len(users_in_work) + 2):
         column_letter = get_column_letter(col_index)
 
         all_total_minutes = f"SUM(ArrayFormula(VALUE(SPLIT(FILTER({column_letter}{total_row_start}:{column_letter}{total_row_end}, REGEXMATCH(A{total_row_start}:A{total_row_end}, \"TOTAL*\")), \":\")) * {{60, 1}}))"
@@ -47,10 +54,10 @@ def append_all_totals(worksheet: gspread.Worksheet, num_days: int, number_users:
         
         all_total_formula_row.append(formatted_time_formula)
 
-    all_total_row = [f'ALL TOTAL [{start_date} / {stop_date}]'] + all_total_formula_row
-    separator_row = ['-' * 20] * len(all_total_row)
+    header_row = ['ALL TOTAL'] + list(users_in_work.keys())
+    all_total_row = [f'[{start_date} / {stop_date}]'] + all_total_formula_row
 
-    worksheet.append_rows([separator_row, all_total_row, separator_row], value_input_option='USER_ENTERED')
+    safety_append_rows(worksheet, [header_row, all_total_row], value_input_option='USER_ENTERED')
 
 
 class GoogleSheetAPI:
@@ -94,7 +101,7 @@ class GoogleSheetAPI:
             sheet_id = sheet_id if sheet_id else SPREADSHEET_ID
             print(f"Sheet {sheet_name} already exists.")
             sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}"
-            print(f"Data successfully updated in Google Sheets. \nOpen the file here: {sheet_url}")
+            print(f"Open the file here: {sheet_url}")
             exit(0)
         except gspread.exceptions.WorksheetNotFound:
             try:
