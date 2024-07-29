@@ -57,6 +57,7 @@ def main(project: str, start: datetime, stop: datetime, api_key: str | None, wor
     file_path = os.path.join(dir_path, file_name)
     if os.path.exists(file_path):
         print(f"File '{file_path}' already exists. Exiting without creating a new file.")
+        print("")
         exit(0)
 
     workbook = Workbook(file_path)
@@ -69,8 +70,9 @@ def main(project: str, start: datetime, stop: datetime, api_key: str | None, wor
 
     users_in_work = clockify_api.get_users_in_work(all_users, project_data['id'], first_day, last_day)
     if not users_in_work:
-        print("No users found in the project for the given period. The table will be created on the basis of an empty user.")
-        users_in_work["User"] = 0
+        print("No users found in the project for the given period. Exiting without creating a new file.")
+        print("")
+        exit(0)
         
     active_users_name = list(users_in_work.keys())
     active_users_id = list(users_in_work.values())

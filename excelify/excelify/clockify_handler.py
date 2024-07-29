@@ -106,10 +106,8 @@ class ClockifyAPI:
             time_entries_by_user = self.get_time_entries_for_user(user_id, params={'project': project_id, 'start': start_of_day.isoformat(), 'end': end_of_day.isoformat()})
             if isinstance(time_entries_by_user, dict):
                 if 'message' in time_entries_by_user:
-                    if user_id == 0:
-                        time_entries[user_id] = {}
-                        return time_entries
-                    raise click.BadParameter(f'User with ID {user_id} does not have any time entries for the given period.')
+                    raise click.BadParameter(f"Error fetching time entries: {time_entries_by_user['message']}")
+                
             elif isinstance(time_entries_by_user, list):
                 for time_entry in time_entries_by_user:
                     start_of_work = self.convert_to_local_time(datetime.fromisoformat(time_entry['timeInterval']['start']).replace(tzinfo=timezone.utc)) # datetime: 1900-01-01 04:31:00+02:00
