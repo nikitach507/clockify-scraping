@@ -99,43 +99,54 @@ class ClockifyAPI:
         response = requests.get(url, headers=self.headers, params=params)
         return response.json()
     
-    def fetch_time_entries(self, users_id, project_id: str, start_of_day: datetime, end_of_day: datetime):
+    def fetch_time_entries(self, users_id, project_id: str, start_of_day: datetime, end_of_day: datetime) -> dict:
         time_entries = defaultdict(lambda: defaultdict(str))
 
         for user_id in users_id:
-            time_entries_by_user = self.get_time_entries_for_user(user_id, params={'project': project_id, 'start': start_of_day.isoformat(), 'end': end_of_day.isoformat()})
-            for time_entry in time_entries_by_user:
-                start_of_work = self.convert_to_local_time(datetime.fromisoformat(time_entry['timeInterval']['start']).replace(tzinfo=timezone.utc)) # datetime: 1900-01-01 04:31:00+02:00
-                end_of_work = self.convert_to_local_time(datetime.now(timezone.utc).replace(tzinfo=timezone.utc) 
-                                                    if time_entry['timeInterval']['end'] is None 
-                                                    else datetime.fromisoformat(time_entry['timeInterval']['end']).replace(tzinfo=timezone.utc)) # datetime: 1900-01-01 04:41:00+02:00
+            time_entries_by_user = self.get_time_entries_for_user(user_id, params={
+                                                                  'project': project_id, 'start': start_of_day.isoformat(), 'end': end_of_day.isoformat()})
+            if isinstance(time_entries_by_user, dict):
+                if 'message' in time_entries_by_user:
+                    raise click.BadParameter(
+                        f"Error fetching time entries: {time_entries_by_user['message']}")
 
-                if start_of_work <= end_of_day and end_of_work >= start_of_day:
-                    selected_start = max(start_of_work, start_of_day) # datetime: 1900-01-01 04:31:00+02:00
-                    selected_end = min(end_of_work, end_of_day) # datetime: 1900-01-01 04:41:00+02:00
+            elif isinstance(time_entries_by_user, list):
+                for time_entry in time_entries_by_user:
+                    start_of_work = self.convert_to_local_time(datetime.fromisoformat(
+                        time_entry['timeInterval']['start']).replace(tzinfo=timezone.utc))  # datetime: 1900-01-01 04:31:00+02:00
+                    end_of_work = self.convert_to_local_time(datetime.now(timezone.utc).replace(tzinfo=timezone.utc)
+                                                             if time_entry['timeInterval']['end'] is None
+                                                             else datetime.fromisoformat(time_entry['timeInterval']['end']).replace(tzinfo=timezone.utc))  # datetime: 1900-01-01 04:41:00+02:00
 
-                    selected_start = self.round_time_to_nearest_quarter(selected_start, round_up=True) # datetime: 1900-01-01 04:30:00+02:00
-                    if selected_end.minute % 15 != 0:
-                        selected_end = self.round_time_to_nearest_quarter(selected_end, round_up=True) # datetime: 1900-01-01 04:45:00+02:00
-                    
-                    while selected_start <= selected_end:
-                        time_slot = selected_start.strftime('%H:%M') # str: 04:30
+                    start_of_work = self.round_time_to_nearest_quarter(
+                        start_of_work, round_up=True)  # datetime: 1900-01-01 04:30:00+02:00
+                    if end_of_work.minute % 15 != 0:
+                        end_of_work = self.round_time_to_nearest_quarter(
+                            end_of_work, round_up=True)  # datetime: 1900-01-01 04:45:00+02:00
+
+                    while start_of_work <= end_of_work:
+                        time_slot = start_of_work.strftime(
+                            '%H:%M')  # str: 04:30
                         time_entries[user_id][time_slot] = time_entry['description']
-                        selected_start += timedelta(minutes=15) # datetime: 1900-01-01 04:45:00+02:00
-        
+                        # datetime: 1900-01-01 04:45:00+02:00
+                        start_of_work += timedelta(minutes=15)
+            else:
+                raise ValueError(
+                    f"Unexpected response type: {type(time_entries_by_user)}")
+
         return time_entries
-    
-    def get_users_exclusion(self, all_users: dict, project_id: str, first_day: datetime, last_day: datetime) -> dict:
-        users_appeared = set()
-        users_exclusion = {}
+
+    def get_users_in_work(self, all_users: dict, project_id: str, first_day: datetime, last_day: datetime) -> dict:
+        users_in_work = {}
+
         for user in all_users:
-            time_entries = self.get_time_entries_for_user(user['id'], params={'project': project_id, 'start': first_day.isoformat(), 'end': last_day.isoformat()})
+            time_entries = self.get_time_entries_for_user(user['id'], params={
+                'project': project_id,
+                'start': first_day.isoformat(),
+                'end': last_day.isoformat()
+            })
 
             if time_entries:
-                users_appeared.add(user['id'])
-
-        for user in all_users:
-            if user['id'] not in users_appeared:
-                users_exclusion[user['id']] = user['name']
-                
-        return users_exclusion
+                users_in_work[user['name']] = user['id']
+        
+        return users_in_work
