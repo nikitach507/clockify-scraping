@@ -12,22 +12,22 @@ from excelify.sheet_handler import set_column_widths
 
 def click_validate_dates(start_date: datetime, end_date: datetime) -> tuple[str, str]:
     if start_date > end_date:
-        raise click.BadParameter('End date must be after start date.')
+        raise click.BadParameter(f'End date {end_date.date()} must be after start date {start_date.date()}.')
     if start_date > datetime.now():
-        raise click.BadParameter('Start date cannot be in the future.')
+        raise click.BadParameter(f'Start date {start_date.date()} cannot be in the future.')
     if end_date > datetime.now():
-        raise click.BadParameter('End date cannot be in the future.')
+        raise click.BadParameter(f'End date {end_date.date()} cannot be in the future.')
 
     return str(start_date.date()), str(end_date.date())
-    
+
 
 def click_validate_auth_data(api_key: str, workspace_id: str, dir_path: str) -> None:
     if api_key and not re.match(r'^[0-9a-zA-Z]{48}$', api_key):
-        raise click.BadParameter('Invalid API key.')
+        raise click.BadParameter(f'Invalid API key: {api_key}.')
     if workspace_id and not re.match(r'^[0-9a-z]{24}$', workspace_id):
-        raise click.BadParameter('Invalid workspace ID.')
+        raise click.BadParameter(f'Invalid workspace ID: {workspace_id}.')
     if dir_path and not os.path.exists(dir_path):
-        raise click.BadParameter('Invalid directory path.')
+        raise click.BadParameter(f'Invalid directory path: {dir_path}.')
         
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']))
@@ -38,19 +38,33 @@ def click_validate_auth_data(api_key: str, workspace_id: str, dir_path: str) -> 
 @click.option('--workspace-id', prompt=False, help='Clockify workspace ID')
 @click.option('--dir_path', prompt=False, help='Path to directory where the Excel file will be saved')
 def main(project: str, start: datetime, stop: datetime, api_key: str | None, workspace_id: str| None, dir_path: str| None):
-    print("")
     dir_path = dir_path if dir_path else EXCEL_DIRECTORY
-
+    print("")
     try:
         total_days = float((stop - start).days) + 1
-        start, stop = click_validate_dates(start, stop) # str: 1900-01-01
+        start, stop = click_validate_dates(start, stop)
         click_validate_auth_data(api_key, workspace_id, dir_path)
 
         clockify_api = ClockifyAPI(api_key=CLOCKIFY_API_KEY if not api_key else api_key,
                                    workspace_id=CLOCKIFY_WORKSPACE_ID if not workspace_id else workspace_id)
         project_data = clockify_api.initialize_project_data(project)
     except click.BadParameter as e:
+        print("Error: Invalid input provided.")
         print(e)
+        print("\nPlease check the following:")
+        if start > stop:
+            print("  - Ensure that the end date is after the start date.")
+        if start > str(datetime.now()):
+            print("  - The start date should not be a future date.")
+        if stop > str(datetime.now()):
+            print("  - The end date should not be a future date.")
+        if 'Invalid API key:' in str(e):
+            print("  - Verify that the API key format is correct. It should be a 48-character alphanumeric string.")
+        if 'Invalid workspace ID:' in str(e):
+            print("  - Verify that the workspace ID format is correct. It should be a 24-character alphanumeric string.")
+        if 'Invalid directory path:' in str(e):
+            print("  - Ensure that the specified directory path exists and is accessible.")
+        print("\nFor more assistance, refer to the user guide or contact support.")
         exit(0)
 
     file_name = f"{project_data['name']} [{start} | {stop}].xlsx"
@@ -82,10 +96,10 @@ def main(project: str, start: datetime, stop: datetime, api_key: str | None, wor
     
     if WORKSPACE_NAME is None:
         worksheet.write_row(0, 0, [f"Report for Period from {start} to {stop}"] + [""] * len(active_users_name), 
-                        workbook.add_format({'bold': True, 'font_size': 20, 'bg_color': 'FFC7CE', 'color': '9C0006'}))
+                        workbook.add_format({'bold': True, 'font_size': 20, 'bg_color': 'FFE3E6', 'color': 'AC3A4D'}))
     else:
         worksheet.write_row(0, 0, [f"{WORKSPACE_NAME} Report for Period from {start} to {stop}"] + [""] * len(active_users_name), 
-                            workbook.add_format({'bold': True, 'font_size': 20, 'bg_color': 'FFC7CE', 'color': '9C0006'}))
+                            workbook.add_format({'bold': True, 'font_size': 20, 'bg_color': 'FFE3E6', 'color': 'AC3A4D'}))
     worksheet.write_row(1, 0, [""])
     
     current_date = start
