@@ -71,14 +71,12 @@ def main(project: str, start: datetime, stop: datetime, api_key: str | None, wor
     first_day = datetime.strptime(start, '%Y-%m-%d').replace(hour=0, minute=15, second=0, microsecond=0, tzinfo=timezone.utc)
     last_day = (datetime.strptime(stop, '%Y-%m-%d') + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=timezone.utc)
 
-    users_exclusion = clockify_api.get_users_exclusion(all_users, project_data['id'], first_day, last_day)
-
-    users_in_work = {user['name']: user['id'] for user in all_users if user['id'] not in users_exclusion}
+    users_in_work = clockify_api.get_users_in_work(all_users, project_data['id'], first_day, last_day)
     if not users_in_work:
         print("No users found in the project for the given period. Exiting without creating a new file.")
         print("")
         exit(0)
-        
+
     active_users_name = list(users_in_work.keys())
     active_users_id = list(users_in_work.values())
 
