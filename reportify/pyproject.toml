@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "reportify"
+version = "0.1.0"
+description = "Extract data from Clockify API and write it to Google Sheets or Excel file"
+authors = ["Nikita Chuprin <nikita.chuprin@hardwario.com>"]
+license = "MIT"
+packages = [{include = "reportify"}]
+
+[tool.poetry.scripts]
+reportify = "reportify.main:main"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+requests = "^2.31.0"
+gspread = "^6.1.0"
+oauth2client = "^4.1.3"
+python-dotenv = "^1.0.1"
+click = "^8.1.7"
+pytz = "^2024.1"
+tqdm = "^4.66.4"
+xlsxwriter = "^3.2.0"
+
+[tool.poetry.dev-dependencies]
+autopep8 = "^2.0.4"
+
+[build-system]
+requires = ["poetry-core>=1.7.0", "wheel"]
+build-backend = "poetry.core.masonry.api"
